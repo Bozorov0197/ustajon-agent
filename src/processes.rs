@@ -1,7 +1,7 @@
 // Process Manager module
 
 use serde::{Deserialize, Serialize};
-use sysinfo::{System, SystemExt, ProcessExt, PidExt};
+use sysinfo::{System, SystemExt, ProcessExt, PidExt, CpuExt};
 use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
