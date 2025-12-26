@@ -96,15 +96,15 @@ impl SystemInfo {
             local_ip: self.get_local_ip(),
             public_ip: self.get_public_ip(),
             mac_address: self.get_mac_address(),
-            uptime: System::uptime(),
-            boot_time: System::boot_time(),
+            uptime: self.system.uptime(),
+            boot_time: self.system.boot_time(),
             antivirus: self.get_antivirus(),
             installed_software: self.get_installed_software(),
         }
     }
     
     fn get_hostname(&self) -> String {
-        System::host_name().unwrap_or_else(|| "Unknown".to_string())
+        self.system.host_name().unwrap_or_else(|| "Unknown".to_string())
     }
     
     fn get_username(&self) -> String {
@@ -113,13 +113,13 @@ impl SystemInfo {
     
     fn get_os(&self) -> String {
         format!("{} {}", 
-            System::name().unwrap_or_else(|| "Unknown".to_string()),
-            System::os_version().unwrap_or_default()
+            self.system.name().unwrap_or_else(|| "Unknown".to_string()),
+            self.system.os_version().unwrap_or_default()
         )
     }
     
     fn get_os_version(&self) -> String {
-        System::os_version().unwrap_or_else(|| "Unknown".to_string())
+        self.system.os_version().unwrap_or_else(|| "Unknown".to_string())
     }
     
     fn get_cpu_name(&self) -> String {

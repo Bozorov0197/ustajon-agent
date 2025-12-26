@@ -78,6 +78,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{info, error, Level};
 use tracing_subscriber::FmtSubscriber;
+use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 pub use config::Config;
 pub use system::SystemInfo;
@@ -305,13 +306,13 @@ password = '{}'"#,
             },
             "file_download" => {
                 let data = self.files.read_file(command)?;
-                Ok(base64::encode(&data))
+                Ok(BASE64.encode(&data))
             },
             "file_upload" => {
                 let parts: Vec<&str> = command.splitn(2, '|').collect();
                 if parts.len() == 2 {
                     let path = parts[0];
-                    let data = base64::decode(parts[1])?;
+                    let data = BASE64.decode(parts[1])?;
                     self.files.write_file(path, &data)?;
                     Ok("File uploaded".to_string())
                 } else {

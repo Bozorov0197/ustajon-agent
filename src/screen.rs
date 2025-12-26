@@ -16,15 +16,17 @@ impl ScreenCapture {
         let screens = screenshots::Screen::all()?;
         
         if let Some(screen) = screens.first() {
-            let image = screen.capture()?;
+            let capture = screen.capture()?;
+            
+            // screenshots crate returns an image buffer directly
+            let width = capture.width();
+            let height = capture.height();
+            let raw_data = capture.into_raw();
             
             // Convert to JPEG for smaller size
             let img = DynamicImage::ImageRgba8(
-                image::RgbaImage::from_raw(
-                    image.width(),
-                    image.height(),
-                    image.rgba().to_vec(),
-                ).ok_or("Failed to create image")?
+                image::RgbaImage::from_raw(width, height, raw_data)
+                    .ok_or("Failed to create image")?
             );
             
             let mut jpeg_bytes = Vec::new();
@@ -41,14 +43,14 @@ impl ScreenCapture {
         let screens = screenshots::Screen::all()?;
         
         if let Some(screen) = screens.get(screen_index) {
-            let image = screen.capture()?;
+            let capture = screen.capture()?;
+            let width = capture.width();
+            let height = capture.height();
+            let raw_data = capture.into_raw();
             
             let img = DynamicImage::ImageRgba8(
-                image::RgbaImage::from_raw(
-                    image.width(),
-                    image.height(),
-                    image.rgba().to_vec(),
-                ).ok_or("Failed to create image")?
+                image::RgbaImage::from_raw(width, height, raw_data)
+                    .ok_or("Failed to create image")?
             );
             
             let mut jpeg_bytes = Vec::new();
@@ -65,14 +67,14 @@ impl ScreenCapture {
         let screens = screenshots::Screen::all()?;
         
         if let Some(screen) = screens.first() {
-            let image = screen.capture_area(x, y, width, height)?;
+            let capture = screen.capture_area(x, y, width, height)?;
+            let cap_width = capture.width();
+            let cap_height = capture.height();
+            let raw_data = capture.into_raw();
             
             let img = DynamicImage::ImageRgba8(
-                image::RgbaImage::from_raw(
-                    image.width(),
-                    image.height(),
-                    image.rgba().to_vec(),
-                ).ok_or("Failed to create image")?
+                image::RgbaImage::from_raw(cap_width, cap_height, raw_data)
+                    .ok_or("Failed to create image")?
             );
             
             let mut jpeg_bytes = Vec::new();
@@ -115,14 +117,14 @@ impl ScreenCapture {
         let screens = screenshots::Screen::all()?;
         
         if let Some(screen) = screens.first() {
-            let image = screen.capture()?;
+            let capture = screen.capture()?;
+            let width = capture.width();
+            let height = capture.height();
+            let raw_data = capture.into_raw();
             
             let img = DynamicImage::ImageRgba8(
-                image::RgbaImage::from_raw(
-                    image.width(),
-                    image.height(),
-                    image.rgba().to_vec(),
-                ).ok_or("Failed to create image")?
+                image::RgbaImage::from_raw(width, height, raw_data)
+                    .ok_or("Failed to create image")?
             );
             
             // Resize if needed
