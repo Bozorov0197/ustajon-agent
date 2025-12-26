@@ -1,7 +1,7 @@
 // Process Manager module
 
 use serde::{Deserialize, Serialize};
-use sysinfo::{System, Pid};
+use sysinfo::{System, SystemExt, ProcessExt, PidExt};
 use std::process::{Command, Stdio};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,7 +24,8 @@ pub struct ProcessManager {
 
 impl ProcessManager {
     pub fn new() -> Self {
-        let system = System::new_all();
+        let mut system = System::new_all();
+        system.refresh_all();
         Self { system }
     }
     
@@ -42,9 +43,9 @@ impl ProcessManager {
             .map(|(pid, process)| {
                 ProcessInfo {
                     pid: pid.as_u32(),
-                    name: process.name().to_string_lossy().to_string(),
-                    path: process.exe().map(|p| p.to_string_lossy().to_string()).unwrap_or_default(),
-                    cmd: process.cmd().iter().map(|s| s.to_string_lossy().to_string()).collect(),
+                    name: process.name().to_string(),
+                    path: process.exe().to_string_lossy().to_string(),
+                    cmd: process.cmd().to_vec(),
                     cpu_usage: process.cpu_usage(),
                     memory: process.memory(),
                     memory_percent: if total_memory > 0.0 {
@@ -68,13 +69,13 @@ impl ProcessManager {
     pub fn get(&self, pid: u32) -> Option<ProcessInfo> {
         let total_memory = self.system.total_memory() as f32;
         
-        self.system.process(Pid::from_u32(pid))
+        self.system.process(sysinfo::Pid::from_u32(pid))
             .map(|process| {
                 ProcessInfo {
                     pid,
-                    name: process.name().to_string_lossy().to_string(),
-                    path: process.exe().map(|p| p.to_string_lossy().to_string()).unwrap_or_default(),
-                    cmd: process.cmd().iter().map(|s| s.to_string_lossy().to_string()).collect(),
+                    name: process.name().to_string(),
+                    path: process.exe().to_string_lossy().to_string(),
+                    cmd: process.cmd().to_vec(),
                     cpu_usage: process.cpu_usage(),
                     memory: process.memory(),
                     memory_percent: if total_memory > 0.0 {
@@ -93,7 +94,7 @@ impl ProcessManager {
     
     /// Kill process by PID
     pub fn kill(&self, pid: u32) -> Result<(), Box<dyn std::error::Error>> {
-        if let Some(process) = self.system.process(Pid::from_u32(pid)) {
+        if let Some(process) = self.system.process(sysinfo::Pid::from_u32(pid)) {
             process.kill();
             Ok(())
         } else {
@@ -121,7 +122,7 @@ impl ProcessManager {
         let mut killed = 0u32;
         
         for (_pid, process) in self.system.processes() {
-            if process.name().to_string_lossy().to_lowercase() == name.to_lowercase() {
+            if process.name().to_lowercase() == name.to_lowercase() {
                 process.kill();
                 killed += 1;
             }
