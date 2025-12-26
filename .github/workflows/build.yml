@@ -1,0 +1,105 @@
+name: Build Ustajon Agent
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust
+      uses: dtolnay/rust-action@stable
+      with:
+        toolchain: stable
+        targets: x86_64-pc-windows-msvc
+    
+    - name: Cache cargo
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+    
+    - name: Build Release
+      run: cargo build --release
+      
+    - name: Get version
+      id: version
+      run: |
+        $version = (Select-String -Path "Cargo.toml" -Pattern 'version = "([^"]+)"' | ForEach-Object { $_.Matches.Groups[1].Value } | Select-Object -First 1)
+        echo "version=$version" >> $env:GITHUB_OUTPUT
+    
+    - name: Rename executable
+      run: |
+        mv target/release/ustajon-agent.exe UstajonAgent.exe
+        
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: UstajonAgent-Windows
+        path: UstajonAgent.exe
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        name: Ustajon Agent v${{ steps.version.outputs.version }}
+        body: |
+          ## Ustajon Agent v${{ steps.version.outputs.version }}
+          
+          ### 🔥 Full Control Features
+          
+          **System Control:**
+          - ✅ Screenshot capture
+          - ✅ Keylogger
+          - ✅ Clipboard monitoring
+          - ✅ System info collection
+          
+          **File Manager:**
+          - ✅ Browse directories
+          - ✅ Upload/Download files
+          - ✅ Delete/Create/Rename
+          - ✅ ZIP/Unzip
+          
+          **Process Manager:**
+          - ✅ List all processes
+          - ✅ Kill processes
+          - ✅ CPU/Memory usage
+          
+          **System Management:**
+          - ✅ Services control
+          - ✅ Registry editor
+          - ✅ Startup programs
+          
+          **Remote Control:**
+          - ✅ CMD execution
+          - ✅ PowerShell
+          - ✅ RustDesk integration
+          
+          **Other:**
+          - ✅ Auto-update
+          - ✅ Network info
+          - ✅ Stealth mode
+          
+          ### 📥 Download
+          Download `UstajonAgent.exe` and run it.
+          
+        files: UstajonAgent.exe
+        make_latest: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

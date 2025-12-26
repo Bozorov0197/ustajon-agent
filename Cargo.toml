@@ -1,0 +1,103 @@
+[package]
+name = "ustajon-agent"
+version = "1.0.0"
+edition = "2021"
+authors = ["Ustajon Technologies"]
+description = "Professional Remote Control Agent - Full System Control"
+license = "MIT"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+
+# JSON
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# System info
+sysinfo = "0.30"
+whoami = "1.4"
+hostname = "0.3"
+
+# Screenshot
+screenshots = "0.8"
+
+# Image processing
+image = "0.24"
+base64 = "0.21"
+
+# File system
+walkdir = "2.4"
+dirs = "5.0"
+trash = "3.1"
+
+# Process management
+# (sysinfo handles this)
+
+# Registry (Windows)
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+windows = { version = "0.52", features = [
+    "Win32_Foundation",
+    "Win32_System_Threading",
+    "Win32_System_ProcessStatus",
+    "Win32_Security",
+    "Win32_System_Services",
+    "Win32_System_Registry",
+    "Win32_System_Power",
+    "Win32_System_Shutdown",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_System_SystemInformation",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_Networking_WinSock",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Console",
+]}
+winapi = { version = "0.3", features = ["winuser", "processthreadsapi", "tlhelp32", "handleapi", "psapi"] }
+
+# Clipboard
+arboard = "3.2"
+
+# Keylogger
+rdev = "0.5"
+
+# Auto-update
+self_update = "0.39"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# UUID
+uuid = { version = "1.6", features = ["v4"] }
+
+# Time
+chrono = "0.4"
+
+# Encryption
+aes-gcm = "0.10"
+sha2 = "0.10"
+
+# Compression
+flate2 = "1.0"
+zip = "0.6"
+
+# Network info
+local-ip-address = "0.5"
+
+# Single instance
+single-instance = "0.3"
+
+# Background service
+[target.'cfg(windows)'.dependencies.windows-service]
+version = "0.6"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
