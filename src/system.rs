@@ -1,7 +1,7 @@
 // System information module
 
 use serde::{Deserialize, Serialize};
-use sysinfo::{System, SystemExt, CpuExt, DiskExt};
+use sysinfo::{System, Disks, CpuRefreshKind, RefreshKind};
 use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -51,17 +51,19 @@ pub struct DiskInfo {
 
 pub struct SystemInfo {
     system: System,
+    disks: Disks,
 }
 
 impl SystemInfo {
     pub fn new() -> Self {
-        let mut system = System::new_all();
-        system.refresh_all();
-        Self { system }
+        let system = System::new_all();
+        let disks = Disks::new_with_refreshed_list();
+        Self { system, disks }
     }
     
     pub fn refresh(&mut self) {
         self.system.refresh_all();
+        self.disks.refresh_list();
     }
     
     pub fn get_info(&self) -> BasicInfo {
@@ -147,7 +149,7 @@ impl SystemInfo {
         let mut total: u64 = 0;
         let mut used: u64 = 0;
         
-        for disk in self.system.disks() {
+        for disk in self.disks.iter() {
             total += disk.total_space();
             used += disk.total_space() - disk.available_space();
         }
@@ -160,7 +162,7 @@ impl SystemInfo {
     }
     
     fn get_disks(&self) -> Vec<DiskInfo> {
-        self.system.disks().iter().map(|disk| {
+        self.disks.iter().map(|disk| {
             let total = disk.total_space();
             let free = disk.available_space();
             let used = total - free;

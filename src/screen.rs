@@ -17,14 +17,13 @@ impl ScreenCapture {
         
         if let Some(screen) = screens.first() {
             let image = screen.capture()?;
-            let buffer = image.buffer();
             
             // Convert to JPEG for smaller size
             let img = DynamicImage::ImageRgba8(
                 image::RgbaImage::from_raw(
                     image.width(),
                     image.height(),
-                    buffer.to_vec(),
+                    image.rgba().to_vec(),
                 ).ok_or("Failed to create image")?
             );
             
@@ -43,13 +42,12 @@ impl ScreenCapture {
         
         if let Some(screen) = screens.get(screen_index) {
             let image = screen.capture()?;
-            let buffer = image.buffer();
             
             let img = DynamicImage::ImageRgba8(
                 image::RgbaImage::from_raw(
                     image.width(),
                     image.height(),
-                    buffer.to_vec(),
+                    image.rgba().to_vec(),
                 ).ok_or("Failed to create image")?
             );
             
@@ -68,13 +66,12 @@ impl ScreenCapture {
         
         if let Some(screen) = screens.first() {
             let image = screen.capture_area(x, y, width, height)?;
-            let buffer = image.buffer();
             
             let img = DynamicImage::ImageRgba8(
                 image::RgbaImage::from_raw(
                     image.width(),
                     image.height(),
-                    buffer.to_vec(),
+                    image.rgba().to_vec(),
                 ).ok_or("Failed to create image")?
             );
             
@@ -119,13 +116,12 @@ impl ScreenCapture {
         
         if let Some(screen) = screens.first() {
             let image = screen.capture()?;
-            let buffer = image.buffer();
             
             let img = DynamicImage::ImageRgba8(
                 image::RgbaImage::from_raw(
                     image.width(),
                     image.height(),
-                    buffer.to_vec(),
+                    image.rgba().to_vec(),
                 ).ok_or("Failed to create image")?
             );
             

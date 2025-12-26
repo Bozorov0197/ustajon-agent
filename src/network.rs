@@ -274,13 +274,12 @@ fn parse_address(addr: &str) -> (String, u16) {
 }
 
 fn get_process_name(pid: u32) -> String {
-    use sysinfo::{System, SystemExt, ProcessExt, PidExt};
+    use sysinfo::{System, Pid};
     
-    let mut sys = System::new();
-    sys.refresh_processes();
+    let sys = System::new_all();
     
-    sys.process(sysinfo::Pid::from_u32(pid))
-        .map(|p| p.name().to_string())
+    sys.process(Pid::from_u32(pid))
+        .map(|p| p.name().to_string_lossy().to_string())
         .unwrap_or_else(|| "Unknown".to_string())
 }
 
