@@ -1,26 +1,32 @@
-# Ustajon Agent v2.0 - C# Edition
+# Ustajon Support Client
 
-Professional Remote Support Agent for Windows
+Professional masofaviy yordam tizimi uchun client dastur.
 
-## Features
+## Xususiyatlari
 
-- ✅ Auto-connect to server
-- ✅ Screenshot capture
-- ✅ CMD/PowerShell execution
-- ✅ Process management
-- ✅ File browsing & upload
-- ✅ System info
-- ✅ RustDesk integration
-- ✅ Auto-startup
-- ✅ Single file EXE (~15MB)
+- 🖥️ Windows uchun GUI interfeys
+- 📋 Ro'yxatdan o'tish formasi
+- 💬 Real-time chat mutaxassis bilan
+- 🔧 RustDesk avtomatik o'rnatish
+- 📊 Tizim ma'lumotlarini yuborish
+- 🔒 Xavfsiz ulanish
 
-## Build
+## O'rnatish
 
-```bash
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
-```
+1. [Releases](../../releases) sahifasidan so'nggi versiyani yuklab oling
+2. `UstajonSupport.exe` faylini ishga tushiring
+3. Ma'lumotlaringizni kiriting va mutaxassisni kuting
+
+## Texnologiyalar
+
+- Python 3.11
+- Tkinter (GUI)
+- PyInstaller (Build)
 
 ## Server
 
-- URL: http://31.220.75.75
-- Admin: http://31.220.75.75/admin
+Server: http://31.220.75.75
+
+## License
+
+MIT

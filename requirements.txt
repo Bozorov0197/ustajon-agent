@@ -1,0 +1,11 @@
+# Ustajon Support Client Dependencies
+# For Python 3.8+
+
+# GUI (tkinter is built-in)
+
+# Screenshot (optional, for advanced features)
+mss>=9.0.0
+Pillow>=10.0.0
+
+# Build
+pyinstaller>=6.0.0

@@ -1,48 +1,46 @@
-name: Build Agent
+name: Build Windows Client
 
 on:
   push:
-    branches: [main]
-    tags: ['v*']
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '6.0.x'
-      
-      - name: Restore
-        run: dotnet restore
-      
-      - name: Publish
-        run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish
-      
-      - name: Rename artifact
-        run: |
-          mkdir -p artifacts
-          copy publish\UstajonAgent.exe artifacts\UstajonAgent.exe
-        shell: cmd
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: UstajonAgent-Windows
-          path: artifacts/UstajonAgent.exe
-      
-      - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: artifacts/UstajonAgent.exe
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyinstaller
+        pip install mss Pillow
+    
+    - name: Build executable
+      run: |
+        pyinstaller --onefile --windowed --name UstajonSupport client.py
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: UstajonSupport-Windows
+        path: dist/UstajonSupport.exe
+        
+    - name: Create Release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.run_number }}
+        files: dist/UstajonSupport.exe
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
