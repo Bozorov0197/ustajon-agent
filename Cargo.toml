@@ -1,0 +1,50 @@
+[package]
+name = "ustajon-agent"
+version = "2.0.0"
+edition = "2021"
+authors = ["Ustajon Technologies"]
+description = "Professional Remote Support Agent"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP client - minimal features
+reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+
+# JSON
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# System info
+sysinfo = "0.30"
+whoami = "1.4"
+
+# Screenshot - cross platform
+screenshots = "0.8"
+
+# Image encoding
+image = { version = "0.24", default-features = false, features = ["jpeg", "png"] }
+base64 = "0.21"
+
+# File system
+dirs = "5.0"
+
+# UUID
+uuid = { version = "1.6", features = ["v4"] }
+
+# Time
+chrono = "0.4"
+
+# Network info
+local-ip-address = "0.6"
+
+# Windows specific
+[target.'cfg(windows)'.dependencies]
+winreg = "0.52"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
