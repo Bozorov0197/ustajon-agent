@@ -10,7 +10,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use sysinfo::System;
+use sysinfo::{System, Disks, CpuRefreshKind, RefreshKind};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 // ============ CONFIGURATION ============
@@ -78,6 +78,7 @@ struct Agent {
     client_id: String,
     client: Client,
     system: System,
+    disks: Disks,
     rustdesk_id: String,
 }
 
@@ -96,6 +97,7 @@ impl Agent {
                 .build()
                 .expect("Failed to create HTTP client"),
             system: System::new_all(),
+            disks: Disks::new_with_refreshed_list(),
             rustdesk_id,
         }
     }
@@ -224,15 +226,16 @@ key = '{}'
     
     fn get_system_info(&mut self) -> (f32, f32, f32) {
         self.system.refresh_all();
+        self.disks.refresh_list();
         
-        let cpu_usage = self.system.global_cpu_usage();
+        let cpu_usage = self.system.global_cpu_info().cpu_usage();
         
         let total_mem = self.system.total_memory() as f64;
         let used_mem = self.system.used_memory() as f64;
         let ram_usage = if total_mem > 0.0 { (used_mem / total_mem * 100.0) as f32 } else { 0.0 };
         
         let mut disk_usage = 0.0f32;
-        for disk in self.system.disks() {
+        for disk in self.disks.iter() {
             let total = disk.total_space() as f64;
             let available = disk.available_space() as f64;
             if total > 0.0 {
@@ -392,6 +395,7 @@ key = '{}'
     
     fn get_detailed_system_info(&mut self) -> String {
         self.system.refresh_all();
+        self.disks.refresh_list();
         
         let mut info = String::new();
         
@@ -402,7 +406,7 @@ key = '{}'
         info.push_str(&format!("Kernel: {}\n", System::kernel_version().unwrap_or_default()));
         
         info.push_str(&format!("\n=== CPU ===\n"));
-        info.push_str(&format!("Usage: {:.1}%\n", self.system.global_cpu_usage()));
+        info.push_str(&format!("Usage: {:.1}%\n", self.system.global_cpu_info().cpu_usage()));
         info.push_str(&format!("Cores: {}\n", self.system.cpus().len()));
         
         info.push_str(&format!("\n=== Memory ===\n"));
@@ -413,7 +417,7 @@ key = '{}'
         info.push_str(&format!("Free: {} MB\n", total_mem - used_mem));
         
         info.push_str(&format!("\n=== Disks ===\n"));
-        for disk in self.system.disks() {
+        for disk in self.disks.iter() {
             let total = disk.total_space() / 1024 / 1024 / 1024;
             let free = disk.available_space() / 1024 / 1024 / 1024;
             info.push_str(&format!("{}: {} GB total, {} GB free\n", 
@@ -438,7 +442,7 @@ key = '{}'
         for (pid, process) in proc_list.iter().take(50) {
             let mem_mb = process.memory() / 1024 / 1024;
             processes.push(format!("{}\t{:.1}\t{}\t{}", 
-                pid, process.cpu_usage(), mem_mb, process.name().to_string_lossy()));
+                pid, process.cpu_usage(), mem_mb, process.name()));
         }
         
         processes.join("\n")
@@ -516,12 +520,12 @@ key = '{}'
         let screen = &screens[0];
         let image = screen.capture()?;
         
-        // Convert to JPEG
+        // Convert to JPEG using raw buffer
         let width = image.width();
         let height = image.height();
-        let rgba_data = image.rgba();
+        let buffer = image.as_raw();
         
-        let img = image::RgbaImage::from_raw(width, height, rgba_data.to_vec())
+        let img = image::RgbaImage::from_raw(width, height, buffer.to_vec())
             .ok_or("Failed to create image")?;
         
         let mut jpeg_data = Vec::new();
@@ -657,8 +661,6 @@ async fn main() {
     // Hide console on Windows in release mode
     #[cfg(all(windows, not(debug_assertions)))]
     {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x08000000;
         // Window is already hidden when compiled with windows subsystem
     }
     
