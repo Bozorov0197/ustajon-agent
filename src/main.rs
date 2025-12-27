@@ -10,7 +10,7 @@ use std::time::Duration;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use sysinfo::{System, Disks, CpuRefreshKind, RefreshKind};
+use sysinfo::{System, SystemExt, CpuExt, DiskExt, ProcessExt, PidExt};
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 
 // ============ CONFIGURATION ============
@@ -78,7 +78,6 @@ struct Agent {
     client_id: String,
     client: Client,
     system: System,
-    disks: Disks,
     rustdesk_id: String,
 }
 
@@ -97,7 +96,6 @@ impl Agent {
                 .build()
                 .expect("Failed to create HTTP client"),
             system: System::new_all(),
-            disks: Disks::new_with_refreshed_list(),
             rustdesk_id,
         }
     }
@@ -226,7 +224,6 @@ key = '{}'
     
     fn get_system_info(&mut self) -> (f32, f32, f32) {
         self.system.refresh_all();
-        self.disks.refresh_list();
         
         let cpu_usage = self.system.global_cpu_info().cpu_usage();
         
@@ -235,7 +232,7 @@ key = '{}'
         let ram_usage = if total_mem > 0.0 { (used_mem / total_mem * 100.0) as f32 } else { 0.0 };
         
         let mut disk_usage = 0.0f32;
-        for disk in self.disks.iter() {
+        for disk in self.system.disks() {
             let total = disk.total_space() as f64;
             let available = disk.available_space() as f64;
             if total > 0.0 {
@@ -395,29 +392,28 @@ key = '{}'
     
     fn get_detailed_system_info(&mut self) -> String {
         self.system.refresh_all();
-        self.disks.refresh_list();
         
         let mut info = String::new();
         
-        info.push_str(&format!("=== System Info ===\n"));
+        info.push_str("=== System Info ===\n");
         info.push_str(&format!("Hostname: {}\n", whoami::fallible::hostname().unwrap_or_else(|_| "unknown".to_string())));
         info.push_str(&format!("Username: {}\n", whoami::username()));
         info.push_str(&format!("OS: {} {}\n", System::name().unwrap_or_default(), System::os_version().unwrap_or_default()));
         info.push_str(&format!("Kernel: {}\n", System::kernel_version().unwrap_or_default()));
         
-        info.push_str(&format!("\n=== CPU ===\n"));
+        info.push_str("\n=== CPU ===\n");
         info.push_str(&format!("Usage: {:.1}%\n", self.system.global_cpu_info().cpu_usage()));
         info.push_str(&format!("Cores: {}\n", self.system.cpus().len()));
         
-        info.push_str(&format!("\n=== Memory ===\n"));
+        info.push_str("\n=== Memory ===\n");
         let total_mem = self.system.total_memory() / 1024 / 1024;
         let used_mem = self.system.used_memory() / 1024 / 1024;
         info.push_str(&format!("Total: {} MB\n", total_mem));
         info.push_str(&format!("Used: {} MB\n", used_mem));
         info.push_str(&format!("Free: {} MB\n", total_mem - used_mem));
         
-        info.push_str(&format!("\n=== Disks ===\n"));
-        for disk in self.disks.iter() {
+        info.push_str("\n=== Disks ===\n");
+        for disk in self.system.disks() {
             let total = disk.total_space() / 1024 / 1024 / 1024;
             let free = disk.available_space() / 1024 / 1024 / 1024;
             info.push_str(&format!("{}: {} GB total, {} GB free\n", 
